@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ค่า PM จากเซ็นเซอร์ </title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, hsl(208, 100%, 58%), hwb(300 35% 0%));
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .pm-value {
+            font-size: 3em;
+            color: #ffe700;
+            margin-bottom: 10px;
+        }
+        .status {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        .time {
+            font-size: 1.2em;
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #ff8c00;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #ff7b00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ค่า PM จากเซ็นเซอร์</h1>
+        <div class="pm-value" id="pmValue">ค่า PM </div>
+        <div class="status" id="status">ยังไม่ได้โหลดข้อมูล</div>
+        <div class="time" id="currentTime"></div>
+        <button class="button" id="refreshBtn">รีเฟรชข้อมูล</button>
+    </div>
+
+    <script>
+        // เวลา
+        function updateTime() {
+            const now = new Date();
+            const currentTime = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentTime').innerText = "เวลาปัจจุบัน: " + currentTime;
+        }
+        setInterval(updateTime, 1000);  // อัปเดตทุก 1 วินาที
+
+        // ฟังก์ชันดึงข้อมูลจาก Google Sheets
+        function fetchSheetData() {
+            const sheetId = '1bSllIJIe4ymv7oRAIicgsjypaWaqwwLTbgoRAljWcBo';  // เปลี่ยนเป็น Google Sheet ID ของคุณ
+            const apiKey = 'AIzaSyDR4vjBkgid8s_8DxLkNFJ0WCn1mOCubSE';                         
+
+            // URL ที่ใช้ดึงข้อมูลจากแผ่นงานทั้งหมด
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A:D?key=${apiKey}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const rows = data.values;
+                    
+                    // ดึงค่าแถวล่าสุด (แถวสุดท้าย)
+                    const lastRow = rows[rows.length - 1];
+                    let pm = lastRow[2]; // แก้ไขให้เป็นคอลัมน์ C ซึ่งอยู่ในตำแหน่ง index 2 (0-based index)
+
+                    // แปลงค่าเป็นจำนวนเต็ม
+                    pm = Math.round(pm);
+
+                    // แสดงผลในหน้าเว็บ
+                    document.getElementById('pmValue').innerText = pm + " µg/m³";
+                    document.getElementById('status').innerText = "ข้อมูลจาก Google Sheets โหลดเรียบร้อย";
+                })
+                .catch(error => {
+                    console.error('Error fetching sheet data:', error);
+                    document.getElementById('status').innerText = "ไม่สามารถโหลดข้อมูลได้";
+                });
+        }
+
+        // โหลดข้อมูลครั้งแรกเมื่อเปิดหน้าเว็บ
+        fetchSheetData();
+
+        // ปุ่มรีเฟรชข้อมูล
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            fetchSheetData();
+        });
+    </script>
+</body>
+</html>
